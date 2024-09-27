@@ -18,9 +18,9 @@ driver = get_driver()
 
 for post in POSTS:
     soup = BeautifulSoup(post, 'html.parser')
-    print("Post ID: ",id)
     id = soup.find("shreddit-post").get("id")
-    
+    print("Post ID: ",id)
+
     enlace_info = []
     enlaces = soup.find_all("a")
     
@@ -40,7 +40,7 @@ for post in POSTS:
     mas_info = True
     while mas_info:
         mas_info = hacer_clic_por_texto(driver, 'Ver más comentarios')
-        time.sleep(2)
+        time.sleep(5)
 
 
     contenido_resp = driver.page_source
@@ -55,14 +55,15 @@ for post in POSTS:
                 "autor": chat.get("author"),
                 "permalink": chat.get("permalink"),
                 "score": chat.get("score"),
-                "depth": chat.get("score"),
+                "depth": chat.get("depth"),
+                "parentid": chat.get("parentid"),
                 "postid": chat.get("postid"),
                 "thingid": chat.get("thingid"),
                 "content-type": chat.get("content-type"),
                 "moderation-verdict": chat.get("moderation-verdict"),
                 "comentario": "",
-                "respuestas": []
             },
+            "respuestas": []
         }
 
         #se obtienen respuestas inmediatas

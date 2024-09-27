@@ -45,6 +45,9 @@ for post in POSTS:
                 with open(path_img, "wb") as archivo:
                     archivo.write(respuesta.content)
                 print("Imagen descargada y guardada correctamente")
+
+                os.makedirs('all_images', exist_ok=True)
+                os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/post_'+str(id)+'_'+str(id_img))), 'all_images/post_'+str(id)+'_'+str(id_img))
             else:
                 print("Error al descargar la imagen:", respuesta.status_code)
             id_img = id_img + 1
