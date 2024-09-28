@@ -12,6 +12,7 @@ app.use(bodyParser.json({ limit: '10mb' }));
 let info_posts = {}
 let cola_process = {'process_1':[], 'process_2':[]}
 let diccio_process = {'process_1':{}, 'process_2':{}}
+let diccio_comments = {}
 
 app.post('/post_html', (req, res) => {
     console.log('/post_html')//, req.body);
@@ -52,7 +53,7 @@ app.post('/post_process_1_msg', (req, res) => {
             post.data['comentarios'] = {}
         
         //console.log('pd', post)
-        let diccio_comments = {}
+        
         for (let i=0; i < MSG_ARR.length; i++){
             const COMMENT = MSG_ARR[i]
             diccio_comments[COMMENT.data.thingid] = COMMENT
@@ -72,6 +73,47 @@ app.post('/post_process_1_msg', (req, res) => {
     
     return res.status(200).send({ "stat": true });
 });
+
+app.get('/get_process_2', (req, res) => {
+    console.log('/get_process_2')//, req.body);
+
+    let item = cola_process['process_2'].pop()
+    diccio_process['process_2'][item.id] = item
+    let data = (item) ? item : ''
+    return res.status(200).send({ "item": data });
+});
+
+app.post('/post_process_2_msg', (req, res) => {
+    console.log('/post_process_2_msg')//, req.body);
+
+    const MSG_    = req.body
+    console.log(MSG_)
+    const ID_POST = req.body.id_post
+
+    let post = info_posts[ID_POST]
+    try {
+        if (!post.data?.comentarios)
+            post.data['comentarios'] = {}
+        
+        const COMMENT = MSG_
+        diccio_comments[COMMENT.data.thingid] = COMMENT
+        if (COMMENT.data.parentid != null)
+            diccio_comments[COMMENT.data.parentid].respuestas.push(COMMENT)
+        else
+            post.data.comentarios[COMMENT.data.thingid] = diccio_comments[COMMENT.data.thingid]
+        
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(200).send({ "stat": false });
+    }
+    
+    post['process_2'] = true
+    delete diccio_process['process_2'][ID_POST]
+    
+    return res.status(200).send({ "stat": true });
+});
+
 
 app.listen(port, () => {
     console.log(`Servidor escuchando en puerto ${port}`);
