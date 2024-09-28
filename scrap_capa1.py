@@ -27,12 +27,12 @@ while ciclar:
             continue
         
         enlace_info = []
-        enlaces = soup.find_all("a")
+        enlaces = post.find_all("a")
         for enlace in enlaces:
             enlace_info.append({ "href": enlace.get("href") })
         
         imagenes_info = []
-        imagenes = soup.find_all("img")
+        imagenes = post.find_all("img")
         id_img = 0
 
         dir_base = 'post_data/'+id
@@ -64,10 +64,9 @@ while ciclar:
             "data": {
                 "id": id,
                 "enlaces": enlace_info,
-                "enlace_comentarios": enlace_info[0],
-                "texto": soup.text,
-                "imagenes": imagenes_info,
-                "html": post.decode_contents()
+                "url": enlace_info[0],
+                "texto": post.text,
+                "imagenes": imagenes_info
             },
             "id": id
         })
