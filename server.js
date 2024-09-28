@@ -41,15 +41,44 @@ app.get('/get_process_1', (req, res) => {
     return res.status(200).send({ "item": data });
 });
 
+function asignar_comentario(post_comments, comment, lvl = 0){
+    if (comment.data['parentid'] == null){
+        post_comments[comment.data['thingid']] = comment
+        return
+    } else 
+    if (comment.data.depth < lvl)
+        asignar_comentario()
+}
+
 app.post('/post_process_1_msg', (req, res) => {
     console.log('/post_process_1_msg')//, req.body);
     const ID_POST = req.body.id_post
     const MSG_ARR = req.body.data
 
-    let post = diccio_process_1_pend[ID_POST]
+    let post = info_posts[ID_POST]
+    try {
+        if (!post.data?.comentarios)
+            post.data['comentarios'] = {}
+        
+        //console.log('pd', post)
+        let diccio_comments = {}
+        for (let i=0; i < MSG_ARR.length; i++){
+            const COMMENT = MSG_ARR[i]
+            diccio_comments[COMMENT.data.thingid] = COMMENT
+            if (COMMENT.data.parentid != null)
+                diccio_comments[COMMENT.data.parentid].respuestas.push(COMMENT)
+            else
+                post.data.comentarios[COMMENT.data.thingid] = diccio_comments[COMMENT.data.thingid]
+        }
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(200).send({ "stat": false });
+    }
     
-    console.log(post)
-    console.log(MSG_ARR)
+    post['process_1'] = true
+    delete diccio_process_1_pend[ID_POST]
+    
     return res.status(200).send({ "stat": true });
 });
 
