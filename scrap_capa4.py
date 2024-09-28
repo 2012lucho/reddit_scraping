@@ -37,9 +37,9 @@ for post in POSTS:
 
         chats = data_post['chats']
         for chat in chats:
-
-            url_info = BASE_URL + chat['header']['permalink']
             try:
+                url_info = BASE_URL + chat['header']['permalink']
+            
                 driver.get(url_info)
             except:
                 continue
