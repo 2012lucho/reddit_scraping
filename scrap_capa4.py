@@ -25,7 +25,11 @@ for post in POSTS:
     nombre_arch = dir_base + '/' + fecha + '.json'
     #try:
     with open( nombre_arch ) as archivo_json:
-        data_post = json.load(archivo_json)
+        try:
+            data_post = json.load(archivo_json)
+        except:
+            print("archivo_json", archivo_json)
+            continue
 
         if (data_post['chats'] == None):
             print("No hay chats registrados")
@@ -107,9 +111,13 @@ for post in POSTS:
         
         data_post['chats'] = chats
         print(data_post)
-        with open( nombre_arch, 'w') as file:
-            json.dump(data_post, file)
-            print('se actualiza el archivo: ', nombre_arch)
-            print('')
+        try:
+            with open( nombre_arch, 'w') as file:
+                json.dump(data_post, file)
+                print('se actualiza el archivo: ', nombre_arch)
+                print('')
+        except:
+            print("Error al actualizar el archivo: ", nombre_arch)
+        
     #except:
     #    print("Archivo de post no encontrado")
