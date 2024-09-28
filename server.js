@@ -10,8 +10,8 @@ const port = process.env.service_port_api;
 app.use(bodyParser.json({ limit: '10mb' }));
 
 let info_posts = {}
-let cola_process_1_pend = []
-let diccio_process_1_pend = []
+let cola_process = {'process_1':[], 'process_2':[]}
+let diccio_process = {'process_1':{}, 'process_2':{}}
 
 app.post('/post_html', (req, res) => {
     console.log('/post_html')//, req.body);
@@ -25,8 +25,8 @@ app.post('/post_html', (req, res) => {
 
     info_posts[ID] = req.body
     info_posts[ID]['process_1'] = false
-    cola_process_1_pend.push(info_posts[ID])
-    diccio_process_1_pend[ID] = info_posts[ID]
+    cola_process['process_1'].push(info_posts[ID])
+    diccio_process['process_1'][ID] = info_posts[ID]
 
     console.log(ID, " Agregado")
     res.send('Petición POST procesada con éxito!');
@@ -35,20 +35,11 @@ app.post('/post_html', (req, res) => {
 app.get('/get_process_1', (req, res) => {
     console.log('/get_process_1')//, req.body);
 
-    let item = cola_process_1_pend.pop()
-    diccio_process_1_pend[item.id] = item
+    let item = cola_process['process_1'].pop()
+    diccio_process['process_1'][item.id] = item
     let data = (item) ? item : ''
     return res.status(200).send({ "item": data });
 });
-
-function asignar_comentario(post_comments, comment, lvl = 0){
-    if (comment.data['parentid'] == null){
-        post_comments[comment.data['thingid']] = comment
-        return
-    } else 
-    if (comment.data.depth < lvl)
-        asignar_comentario()
-}
 
 app.post('/post_process_1_msg', (req, res) => {
     console.log('/post_process_1_msg')//, req.body);
@@ -77,7 +68,7 @@ app.post('/post_process_1_msg', (req, res) => {
     }
     
     post['process_1'] = true
-    delete diccio_process_1_pend[ID_POST]
+    delete diccio_process['process_1'][ID_POST]
     
     return res.status(200).send({ "stat": true });
 });
@@ -100,6 +91,8 @@ setInterval(async () => {
     }   
 }, process.env.INTERVALO_GUARDADO)
 
+const PROCESOS = ['process_1', 'process_2']
+
 if (fs.existsSync(ARCHIVO_RUNTIME)) {
     try {
         console.log("Se encontro archivo runtime, procesando")
@@ -108,15 +101,19 @@ if (fs.existsSync(ARCHIVO_RUNTIME)) {
 
             let keys_ = Object.keys(info_posts)
             for (let i=0; i < keys_.length; i++){
+                for (let j=0; j < PROCESOS.length; j++){
 
-                if (info_posts[keys_[i]]['process_1'] === undefined)
-                    info_posts[keys_[i]]['process_1'] = false
+                    if (info_posts[keys_[i]][PROCESOS[j]] === undefined)
+                        info_posts[keys_[i]][PROCESOS[j]] = false
+    
+                    if (info_posts[keys_[i]][PROCESOS[j]] == false) {
+                        cola_process[PROCESOS[j]].push(info_posts[keys_[i]])
+                        diccio_process[PROCESOS[j]][keys_[i]] = info_posts[keys_[i]]
+                        console.log(keys_[i], ' agregado a lista ',PROCESOS[j])
+                    }
 
-                if (info_posts[keys_[i]]['process_1'] == false) {
-                    cola_process_1_pend.push(info_posts[keys_[i]])
-                    diccio_process_1_pend[keys_[i]] = info_posts[keys_[i]]
-                    console.log(keys_[i], ' agregado a lista proceso 1')
                 }
+                
             }
         });
     } catch (error) {
