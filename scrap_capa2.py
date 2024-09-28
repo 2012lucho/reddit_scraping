@@ -5,64 +5,88 @@ from utils import *
 
 fecha     = datetime.datetime.now().strftime("%Y%m%d")
 
-nombre_arch = 'posts_' + fecha + '.json'
-try:
-    with open( nombre_arch ) as archivo_json:
-        POSTS = json.load(archivo_json)
-except:
-    print("Archivo de posts no encontrado")
-
 BASE_URL = "https://www.reddit.com"
 
 driver = get_driver()
 
-for post in POSTS:
-    soup = BeautifulSoup(post, 'html.parser')
-    print("Post ID: ",id)
+headers_ = {
+    "Accept": "application/json",
+}
+
+while True:
+    print("Obteniendo post...")
+    post = ''
+    while post == '':
+        respuesta = requests.get('http://localhost:5555/get_process_1',headers=headers_)
+        post = respuesta.json()
+        post = post['item']
+        if (post == ''):
+            print("No hay post, reintentando en 10 segundos")
+            time.sleep(10)
+
+    print("post obtenido ",post)
+
+    soup = BeautifulSoup(post['html'], 'html.parser')
     id = soup.find("shreddit-post").get("id")
-    
+    print("Post ID: ",id)
+
     enlace_info = []
     enlaces = soup.find_all("a")
-    for enlace in enlaces:
-        enlace_info.append({ "href": enlace.get("href") })
-    
-    imagenes_info = []
-    imagenes = soup.find_all("img")
-    id_img = 0
 
     dir_base = 'post_data/'+id
     os.makedirs(dir_base, exist_ok=True)
-    os.makedirs(dir_base+'/img', exist_ok=True)
 
-    for img in imagenes:
-        url_imagen = img.get("src")        
+    #Se obtienen las respuestas
+    enlace_comentarios = BASE_URL + enlaces[0]['href']
+    try:
+        driver.get(enlace_comentarios)
+    except:
+        exit(0)
 
-        path_img = dir_base+'/img/'+str(id_img)
-        imagenes_info.append({ "src": url_imagen, "path": path_img })
-        try:
-            respuesta = requests.get(url_imagen)
-            if respuesta.status_code == 200:
-                with open(path_img, "wb") as archivo:
-                    archivo.write(respuesta.content)
-                print("Imagen descargada y guardada correctamente")
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'html')))
 
-                os.makedirs('all_images', exist_ok=True)
-                os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/post_'+str(id)+'_'+str(id_img))), 'all_images/post_'+str(id)+'_'+str(id_img))
-            else:
-                print("Error al descargar la imagen:", respuesta.status_code)
-            id_img = id_img + 1
-        except:
-            print("Error al descargar la imagen")
-    
-    #print("Enlaces: ", enlaces)
-    #print("Imágenes: ", imagenes)
+    scroll_hasta_el_final(driver)
+    mas_info = True
+    while mas_info:
+        mas_info = hacer_clic_por_texto(driver, 'Ver más comentarios')
+        time.sleep(5)
 
-    post_data = {
-        "id": id, "enlaces" : enlace_info, "enlace_comentarios": enlace_info[0], "texto": soup.text, "imagenes": imagenes_info, "html": post
-    }
-    
-    
-    nombre_arch = dir_base + '/' + fecha + '.json'
-    with open(nombre_arch, 'w') as file:
-        json.dump(post_data, file)
-        print(nombre_arch)
+    contenido_resp = driver.page_source
+    soup_resp = BeautifulSoup(contenido_resp, 'html.parser')
+
+    #se obtienen los chats
+    chats = soup_resp.find_all("shreddit-comment")
+    all_chats_0 = []
+    for chat in chats:
+        chat_info = {
+            "data": {
+                "autor": chat.get("author"),
+                "permalink": chat.get("permalink"),
+                "score": chat.get("score"),
+                "depth": chat.get("depth"),
+                "parentid": chat.get("parentid"),
+                "postid": chat.get("postid"),
+                "thingid": chat.get("thingid"),
+                "content-type": chat.get("content-type"),
+                "moderation-verdict": chat.get("moderation-verdict"),
+                "ts": chat.find("time").get("datetime"),
+            },
+            "comentario": "",
+            "respuestas": []
+        }
+
+        resp_0 = chat.find("p")
+        if (resp_0 != None):
+            chat_info["comentario"] = resp_0.text
+        print(chat_info)
+        all_chats_0.append(chat_info)
+
+    response = requests.post('http://localhost:5555/post_process_1_msg', json={
+            "data": all_chats_0,
+            "id_post": id
+        })
+    if response.status_code == 200:
+        print("Enviado!")
+    else:
+        print("Error en la petición POST:", response.status_code)
+        
