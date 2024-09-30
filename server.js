@@ -78,6 +78,7 @@ app.get('/get_process_2', (req, res) => {
     console.log('/get_process_2')//, req.body);
 
     let item = cola_process['process_2'].pop()
+    console.log(item)
     diccio_process['process_2'][item.id] = item
     let data = (item) ? item : ''
     return res.status(200).send({ "item": data });
@@ -122,7 +123,7 @@ app.listen(port, () => {
 const HOY = new Date()
 const fecha = String(HOY.getFullYear())+String(HOY.getMonth())+String(HOY.getDate())
 const ARCHIVO_RUNTIME = "./resultados/runtime"+fecha+".json"
-
+const ARCHIVO_DICCIO = "./resultados/runtime"+fecha+"_diccio.json"
 setInterval(async () => {
     try {
         fs.writeFile(ARCHIVO_RUNTIME, JSON.stringify(info_posts), err => {
@@ -130,7 +131,15 @@ setInterval(async () => {
         })
     } catch (error) {
         console.log("error al guardar archivo", error)
-    }   
+    } 
+    
+    try {
+        fs.writeFile(ARCHIVO_DICCIO, JSON.stringify(diccio_comments), err => {
+            console.log("Done writing"); // Success
+        })
+    } catch (error) {
+        console.log("error al guardar archivo", error)
+    }
 }, process.env.INTERVALO_GUARDADO)
 
 const PROCESOS = ['process_1', 'process_2']
@@ -157,6 +166,19 @@ if (fs.existsSync(ARCHIVO_RUNTIME)) {
                 }
                 
             }
+        });
+    } catch (error) {
+        console.log(error)
+    }
+} else {
+    console.log("no hay archivo runtime encontrado")
+}
+
+if (fs.existsSync(ARCHIVO_DICCIO)) {
+    try {
+        console.log("Se encontro archivo diccionario")
+        fs.readFile(ARCHIVO_DICCIO, function(err, data) {
+            diccio_comments = JSON.parse(data);
         });
     } catch (error) {
         console.log(error)

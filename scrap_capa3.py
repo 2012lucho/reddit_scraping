@@ -75,15 +75,15 @@ while True:
                     if respuesta.status_code == 200:
                         with open(path_img, "wb") as archivo:
                             archivo.write(respuesta.content)
-                        print("Imagen descargada y guardada correctamente")
+                        print("Imagen descargada")
                         img_info.append({ "src": url_imagen, "path": path_img })
                         os.makedirs('all_images', exist_ok=True)
                         os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/post_'+str(id)+'_'+str(id_img))), 'all_images/post_'+str(id)+'_'+str(id_img))
                     else:
                         print("Error al descargar la imagen:", respuesta.status_code)
                     id_img = id_img + 1
-                except:
-                    print("Error al descargar la imagen")
+                except Exception as e:
+                    print("Error al guardar la imagen", e)
 
             send_data = {
                     "data": {

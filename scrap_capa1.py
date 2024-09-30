@@ -8,15 +8,16 @@ fecha     = datetime.datetime.now().strftime("%Y%m%d")
 
 driver = get_driver()
 
-driver.get(BASE_URL)
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'html')))
+TIEMPO_INTERCONSULTA = 600
 
 ciclar = True
 
 diccio_posts = {}
 
 while ciclar:
-    scroll_hasta_el_final(driver, True)
+    driver.get(BASE_URL)
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'html')))
+    #scroll_hasta_el_final(driver, True)
 
     contenido = driver.page_source
     soup = BeautifulSoup(contenido, 'html.parser')
@@ -74,4 +75,5 @@ while ciclar:
             print("Enviado!")
         else:
             print("Error en la petición POST:", response.status_code)
-    time.sleep(2)
+    print("esperando ", TIEMPO_INTERCONSULTA, " segundos")
+    time.sleep(TIEMPO_INTERCONSULTA)
