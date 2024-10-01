@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 import sys
 from utils import *
+import random
 
-BASE_URL  = "https://www.reddit.com/r/devsarg/"
-fecha     = datetime.datetime.now().strftime("%Y%m%d")
+BASE_URL  = "https://www.reddit.com/r/devsarg/new/"
 
 driver = get_driver()
 
-TIEMPO_INTERCONSULTA = 600
+TIEMPO_INTERCONSULTA = 150
 
 ciclar = True
 
@@ -42,23 +42,10 @@ while ciclar:
             
         for img in imagenes:
             url_imagen = img.get("src")        
-
-            path_img = dir_base+'/img/'+str(id_img)
+            descargar_imagen(url_imagen, dir_base,id + '_' + str(id_img))
+            path_img = dir_base + '/img/' + id + '_' + str(id_img)
             imagenes_info.append({ "src": url_imagen, "path": path_img })
-            try:
-                respuesta = requests.get(url_imagen)
-                if respuesta.status_code == 200:
-                    with open(path_img, "wb") as archivo:
-                        archivo.write(respuesta.content)
-                    print("Imagen descargada y guardada correctamente")
-
-                    os.makedirs('all_images', exist_ok=True)
-                    os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/post_'+str(id)+'_'+str(id_img))), 'all_images/post_'+str(id)+'_'+str(id_img))
-                else:
-                    print("Error al descargar la imagen:", respuesta.status_code)
-                id_img = id_img + 1
-            except Exception as e:
-                print("Error al descargar la imagen", e)
+            id_img = id_img + 1
 
         response = requests.post('http://localhost:5555/post_html', json={
             "html": post.decode_contents(), 
@@ -75,5 +62,6 @@ while ciclar:
             print("Enviado!")
         else:
             print("Error en la petición POST:", response.status_code)
-    print("esperando ", TIEMPO_INTERCONSULTA, " segundos")
+    print("esperando para prox ciclo")
+    time.sleep(random.randint(1, TIEMPO_INTERCONSULTA/5))
     time.sleep(TIEMPO_INTERCONSULTA)

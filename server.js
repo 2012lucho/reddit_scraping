@@ -121,7 +121,8 @@ app.listen(port, () => {
 });
 
 const HOY = new Date()
-const fecha = String(HOY.getFullYear())+String(HOY.getMonth())+String(HOY.getDate())
+const fecha = '2024830'
+//const fecha = String(HOY.getFullYear())+String(HOY.getMonth())+String(HOY.getDate())
 const ARCHIVO_RUNTIME = "./resultados/runtime"+fecha+".json"
 const ARCHIVO_DICCIO = "./resultados/runtime"+fecha+"_diccio.json"
 setInterval(async () => {

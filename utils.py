@@ -43,3 +43,23 @@ def hacer_clic_por_texto(driver, texto):
     except:
         print("No se pudo hacer clic en el elemento")
         return False
+    
+def descargar_imagen(url_imagen, dir_base, name):
+    os.makedirs(dir_base+'/img', exist_ok=True)
+
+    path_img = dir_base+'/img/'+name
+    try:
+        respuesta = requests.get(url_imagen)
+        if respuesta.status_code == 200:
+            with open(path_img, "wb") as archivo:
+                archivo.write(respuesta.content)
+            print("Imagen descargada")
+            
+            os.makedirs('all_images', exist_ok=True)
+            os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/'+name)), 'all_images/'+name)
+        else:
+            print("Error al descargar la imagen:", respuesta.status_code)
+        
+
+    except Exception as e:
+        print("Error al guardar la imagen", e)

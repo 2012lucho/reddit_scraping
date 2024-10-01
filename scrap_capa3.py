@@ -64,26 +64,12 @@ while True:
             if (coment.find("p") != None):
                 text = coment.find("p").text
 
-            os.makedirs(dir_base+'/img', exist_ok=True)
 
             for img in imagenes:
                 url_imagen = img.get("src")        
-
-                path_img = dir_base+'/img/'+str(id_img)
-                try:
-                    respuesta = requests.get(url_imagen)
-                    if respuesta.status_code == 200:
-                        with open(path_img, "wb") as archivo:
-                            archivo.write(respuesta.content)
-                        print("Imagen descargada")
-                        img_info.append({ "src": url_imagen, "path": path_img })
-                        os.makedirs('all_images', exist_ok=True)
-                        os.symlink(os.path.relpath(path_img, os.path.dirname('all_images/post_'+str(id)+'_'+str(id_img))), 'all_images/post_'+str(id)+'_'+str(id_img))
-                    else:
-                        print("Error al descargar la imagen:", respuesta.status_code)
-                    id_img = id_img + 1
-                except Exception as e:
-                    print("Error al guardar la imagen", e)
+                descargar_imagen(url_imagen, dir_base,coment.get("thingid") + '_' + str(id_img))
+                id_img = id_img + 1
+                img_info.append({ "src": url_imagen, "path": dir_base + '/img/' + coment.get("thingid") + '_' + str(id_img) })
 
             send_data = {
                     "data": {

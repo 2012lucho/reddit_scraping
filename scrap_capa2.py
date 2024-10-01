@@ -3,8 +3,6 @@
 import sys
 from utils import *
 
-fecha     = datetime.datetime.now().strftime("%Y%m%d")
-
 BASE_URL = "https://www.reddit.com"
 
 driver = get_driver()
