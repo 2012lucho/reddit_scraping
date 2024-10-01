@@ -4,7 +4,13 @@ import sys
 from utils import *
 import random
 
-BASE_URL  = "https://www.reddit.com/r/devsarg/new/"
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--sub_reddit_url", type=str, help="Sub reddit, ej: /devsarg/new/")
+args = parser.parse_args()
+URL_SUB_REDDIT    = args.sub_reddit_url
+
+BASE_URL  = "https://www.reddit.com/r"+URL_SUB_REDDIT
 
 driver = get_driver()
 
@@ -17,6 +23,7 @@ diccio_posts = {}
 while ciclar:
     driver.get(BASE_URL)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'html')))
+    #time.sleep(45)
     #scroll_hasta_el_final(driver, True)
 
     contenido = driver.page_source
