@@ -47,21 +47,39 @@ while ciclar:
             imagenes_info.append({ "src": url_imagen, "path": path_img })
             id_img = id_img + 1
 
-        response = requests.post('http://localhost:5555/post_html', json={
-            "html": post.decode_contents(), 
-            "data": {
-                "id": id,
-                "enlaces": enlace_info,
-                "url": enlace_info[0],
-                "texto": post.text.strip(),
-                "imagenes": imagenes_info
-            },
-            "id": id
-        })
-        if response.status_code == 200:
-            print("Enviado!")
-        else:
-            print("Error en la petición POST:", response.status_code)
+        id_title = "post-title-"+id
+        id_post_cont = id + "-post-rtjson-content"
+        
+        try:
+            response = requests.post('http://localhost:5555/post_html', json={
+                "html": post.decode_contents(), 
+                "data": {
+                    "id": id,
+                    "url": post.find("shreddit-post").get("content-href"),
+                    "titulo": post.find(id=id_title).text.strip(),
+                    "texto": post.find(id=id_post_cont).text.replace("\n", "").strip(),
+                    "timestamp": post.find("shreddit-post").get("created-timestamp"),
+
+                    "score": post.find("shreddit-post").get("score"),
+                    "author-id": post.find("shreddit-post").get("author-id"),
+                    "author": post.find("shreddit-post").get("author"),
+
+                    "enlaces": enlace_info,  
+                    "comment-count": post.find("shreddit-post").get("comment-count"),
+                    "domain": post.find("shreddit-post").get("domain"),
+                    "post-language": post.find("shreddit-post").get("domain"),
+                    "imagenes": imagenes_info
+                },
+                "id": id
+            })
+            if response.status_code == 200:
+                print("Enviado!")
+            else:
+                print("Error en la petición POST:", response.status_code)
+        except Exception as e:
+            print("Error al obtener datos del post", e, post)
+            continue
+
     print("esperando para prox ciclo")
     time.sleep(random.randint(1, TIEMPO_INTERCONSULTA/5))
     time.sleep(TIEMPO_INTERCONSULTA)
