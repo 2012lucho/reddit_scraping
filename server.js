@@ -84,6 +84,14 @@ app.get('/get_process_2', (req, res) => {
     return res.status(200).send({ "item": data });
 });
 
+app.get('/get_results', (req, res) => {
+    console.log('/get_results')//, req.body);
+
+    return res.status(200).send({ "data": info_posts });
+});
+
+
+
 app.post('/post_process_2_msg', (req, res) => {
     console.log('/post_process_2_msg')//, req.body);
 

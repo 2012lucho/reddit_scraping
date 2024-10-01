@@ -85,7 +85,7 @@ while True:
                         "ts": coment.find("time").get("datetime"),
                         'imagenes': img_info,
                     },
-                    "comentario": text,
+                    "comentario": text.strip(),
                     "respuestas": [],
                     "id_post": id_post
                 }

@@ -53,7 +53,7 @@ while ciclar:
                 "id": id,
                 "enlaces": enlace_info,
                 "url": enlace_info[0],
-                "texto": post.text,
+                "texto": post.text.strip(),
                 "imagenes": imagenes_info
             },
             "id": id

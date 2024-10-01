@@ -75,7 +75,7 @@ while True:
 
         resp_0 = chat.find("p")
         if (resp_0 != None):
-            chat_info["comentario"] = resp_0.text
+            chat_info["comentario"] = resp_0.text.strip()
         print(chat_info)
         all_chats_0.append(chat_info)
 
