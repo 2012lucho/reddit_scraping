@@ -16,7 +16,13 @@ while True:
     post = ''
     while post == '':
         respuesta = requests.get('http://localhost:5555/get_process_1',headers=headers_)
-        post = respuesta.json()
+        try:
+            post = respuesta.json()
+        except Exception as e:
+            print(e)
+            print("No hay post, reintentando en 10 segundos")
+            time.sleep(10)
+            continue
         post = post['item']
         if (post == ''):
             print("No hay post, reintentando en 10 segundos")

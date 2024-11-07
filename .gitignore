@@ -5,3 +5,4 @@ all_images
 test.html
 test.json
 resultados/*.zip
+resultados_busqueda.json

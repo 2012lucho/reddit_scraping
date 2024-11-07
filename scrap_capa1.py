@@ -23,7 +23,7 @@ diccio_posts = {}
 while ciclar:
     driver.get(BASE_URL)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'html')))
-    #time.sleep(45)
+    time.sleep(45)
     #scroll_hasta_el_final(driver, True)
 
     contenido = driver.page_source
@@ -88,5 +88,4 @@ while ciclar:
             continue
 
     print("esperando para prox ciclo")
-    time.sleep(random.randint(1, TIEMPO_INTERCONSULTA/5))
     time.sleep(TIEMPO_INTERCONSULTA)
