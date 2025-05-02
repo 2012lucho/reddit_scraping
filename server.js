@@ -27,6 +27,9 @@ db.once('open', function () {
 
 const postSchema = new mongoose.Schema({
     id: String,
+    html: String, 
+    data: Object, 
+    process_1: Boolean,
 });
 const Post = mongoose.model('Post', postSchema);
 
@@ -34,19 +37,15 @@ app.post('/post_html', async (req, res) => {
     console.log('/post_html')//, req.body);
     const ID = req.body.id
 
-    if (info_posts[ID]) {
+    const existingPost = await Post.findOne({ id: ID });
+    if (existingPost) {
         console.log("Ya hay un elemento con ese ID", ID)
         res.send('Ya hay un elemento con ese ID');
         return
     }
 
-    info_posts[ID] = req.body
-    info_posts[ID]['process_1'] = false
-    cola_process['process_1'].push(info_posts[ID])
-    diccio_process['process_1'][ID] = info_posts[ID]
-
     console.log(ID, " Agregado")
-    const post = new Post({ id: ID, ...req.body });
+    const post = new Post({ id: ID, ...req.body })
     try {
         const savedPost = await post.save();
         console.log(ID, " Agregado")
@@ -55,7 +54,6 @@ app.post('/post_html', async (req, res) => {
         console.error(err);
         return res.send('Error al guardar el post', err);
     }
-    return res.send('Petición POST procesada con éxito!');
 })
 
 app.get('/get_process_1', (req, res) => {
