@@ -62,36 +62,27 @@ app.get('/get_process_1', async (req, res) => {
     return res.status(200).send({ "item": item });
 })
 
-app.post('/post_process_1_msg', (req, res) => {
+app.post('/post_process_1_msg', async (req, res) => {
     console.log('/post_process_1_msg')//, req.body);
     const ID_POST = req.body.id_post
     const MSG_ARR = req.body.data
 
-    let post = info_posts[ID_POST]
     try {
-        if (!post.data?.comentarios)
-            post.data['comentarios'] = {}
-
-        //console.log('pd', post)
-
-        for (let i = 0; i < MSG_ARR.length; i++) {
-            const COMMENT = MSG_ARR[i]
-            diccio_comments[COMMENT.data.thingid] = COMMENT
-            if (COMMENT.data.parentid != null)
-                diccio_comments[COMMENT.data.parentid].respuestas.push(COMMENT)
-            else
-                post.data.comentarios[COMMENT.data.thingid] = diccio_comments[COMMENT.data.thingid]
+        const post = await Post.findOne({ id: ID_POST });
+        if (!post) {
+            return res.status(404).send({ "message": "No se encontró el post" });
         }
+        
+        post.set({ 'data.comentarios': MSG_ARR });
+        post['process_1'] = true
 
+        await post.save();
+
+        return res.status(200).send({ "stat": true });
     } catch (error) {
         console.log(error)
         return res.status(200).send({ "stat": false });
     }
-
-    post['process_1'] = true
-    delete diccio_process['process_1'][ID_POST]
-
-    return res.status(200).send({ "stat": true });
 });
 
 app.get('/get_process_2', (req, res) => {
