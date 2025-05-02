@@ -15,7 +15,6 @@ let cola_process = { 'process_1': [], 'process_2': [] }
 let diccio_process = { 'process_1': {}, 'process_2': {} }
 let diccio_comments = {}
 
-
 const mongoURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`;
 mongoose.connect(mongoURI);
 const db = mongoose.connection;
@@ -56,14 +55,12 @@ app.post('/post_html', async (req, res) => {
     }
 })
 
-app.get('/get_process_1', (req, res) => {
+app.get('/get_process_1', async (req, res) => {
     console.log('/get_process_1')//, req.body);
 
-    let item = cola_process['process_1'].pop()
-    diccio_process['process_1'][item.id] = item
-    let data = (item) ? item : ''
-    return res.status(200).send({ "item": data });
-});
+    const item = await Post.findOne({ process_1: false });
+    return res.status(200).send({ "item": item });
+})
 
 app.post('/post_process_1_msg', (req, res) => {
     console.log('/post_process_1_msg')//, req.body);

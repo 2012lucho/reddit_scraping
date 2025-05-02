@@ -19,10 +19,11 @@ while True:
         try:
             post = respuesta.json()
         except Exception as e:
-            print(e)
+            print(e, respuesta)
             print("No hay post, reintentando en 10 segundos")
             time.sleep(10)
             continue
+        print("post obtenido ",post)
         post = post['item']
         if (post == ''):
             print("No hay post, reintentando en 10 segundos")
