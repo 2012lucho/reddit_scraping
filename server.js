@@ -11,9 +11,6 @@ const port = process.env.service_port_api;
 app.use(bodyParser.json({ limit: '10mb' }));
 
 let info_posts = {}
-let cola_process = { 'process_1': [], 'process_2': [] }
-let diccio_process = { 'process_1': {}, 'process_2': {} }
-let diccio_comments = {}
 
 const mongoURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`;
 mongoose.connect(mongoURI);
@@ -29,6 +26,7 @@ const postSchema = new mongoose.Schema({
     html: String, 
     data: Object, 
     process_1: Boolean,
+    process_2: Boolean,
 });
 const Post = mongoose.model('Post', postSchema);
 
@@ -44,7 +42,7 @@ app.post('/post_html', async (req, res) => {
     }
 
     console.log(ID, " Agregado")
-    const post = new Post({ id: ID, ...req.body })
+    const post = new Post({ id: ID, ...req.body, process_1: false, process_2: false })
     try {
         const savedPost = await post.save();
         console.log(ID, " Agregado")
@@ -73,7 +71,14 @@ app.post('/post_process_1_msg', async (req, res) => {
             return res.status(404).send({ "message": "No se encontró el post" });
         }
         
-        post.set({ 'data.comentarios': MSG_ARR });
+        let diccio_comments = post?.data?.comentarios ? post.data.comentarios : {}
+
+        for (let i = 0; i < MSG_ARR.length; i++) {
+            const COMMENT = MSG_ARR[i]
+            diccio_comments[COMMENT.data.thingid] = COMMENT
+        }
+
+        post.set({ 'data.comentarios': diccio_comments });
         post['process_1'] = true
 
         await post.save();
@@ -85,15 +90,16 @@ app.post('/post_process_1_msg', async (req, res) => {
     }
 });
 
-app.get('/get_process_2', (req, res) => {
+app.get('/get_process_2', async (req, res) => {
     console.log('/get_process_2')//, req.body);
 
-    let item = cola_process['process_2'].pop()
-    console.log(item)
-    diccio_process['process_2'][item.id] = item
-    let data = (item) ? item : ''
-    return res.status(200).send({ "item": data });
-});
+    const item = await Post.findOne({ $or: [{ process_2: false }, { process_2: null }] })
+    if (item) {
+        return res.status(200).send({ "item": item });
+    } else {
+        return res.status(404).send({ "message": "No se encontró un post con process_2 igual a false o no definido" });
+    }
+})
 
 app.get('/get_results', (req, res) => {
     console.log('/get_results')//, req.body);
@@ -101,108 +107,38 @@ app.get('/get_results', (req, res) => {
     return res.status(200).send({ "data": info_posts });
 });
 
-
-
-app.post('/post_process_2_msg', (req, res) => {
+app.post('/post_process_2_msg', async (req, res) => {
     console.log('/post_process_2_msg')//, req.body);
 
     const MSG_ = req.body
     console.log(MSG_)
     const ID_POST = req.body.id_post
 
-    let post = info_posts[ID_POST]
+    const post = await Post.findOne({ id: ID_POST });
+    if (!post) {
+        return res.status(404).send({ "message": "No se encontró el post" });
+    }
+
     try {
-        if (!post.data?.comentarios)
-            post.data['comentarios'] = {}
+        let diccio_comments = post?.data?.comentarios ? post.data.comentarios : {}
 
         const COMMENT = MSG_
         diccio_comments[COMMENT.data.thingid] = COMMENT
-        if (COMMENT.data.parentid != null)
-            diccio_comments[COMMENT.data.parentid].respuestas.push(COMMENT)
-        else
-            post.data.comentarios[COMMENT.data.thingid] = diccio_comments[COMMENT.data.thingid]
 
+        post.set({ 'data.comentarios': diccio_comments })
+        post['process_2'] = true
+
+        await post.save();
+
+        return res.status(200).send({ "stat": true });
 
     } catch (error) {
         console.log(error)
         return res.status(200).send({ "stat": false });
     }
 
-    post['process_2'] = true
-    delete diccio_process['process_2'][ID_POST]
-
-    return res.status(200).send({ "stat": true });
 });
-
 
 app.listen(port, () => {
     console.log(`Servidor escuchando en puerto ${port}`);
 });
-
-const HOY = new Date()
-const fecha = '20250502'
-//const fecha = String(HOY.getFullYear())+String(HOY.getMonth())+String(HOY.getDate())
-const ARCHIVO_RUNTIME = "./resultados/runtime" + fecha + ".json"
-const ARCHIVO_DICCIO = "./resultados/runtime" + fecha + "_diccio.json"
-setInterval(async () => {
-    try {
-        fs.writeFile(ARCHIVO_RUNTIME, JSON.stringify(info_posts), err => {
-            console.log("Done writing"); // Success
-        })
-    } catch (error) {
-        console.log("error al guardar archivo", error)
-    }
-
-    try {
-        fs.writeFile(ARCHIVO_DICCIO, JSON.stringify(diccio_comments), err => {
-            console.log("Done writing"); // Success
-        })
-    } catch (error) {
-        console.log("error al guardar archivo", error)
-    }
-}, process.env.INTERVALO_GUARDADO)
-
-const PROCESOS = ['process_1', 'process_2']
-
-if (fs.existsSync(ARCHIVO_RUNTIME)) {
-    try {
-        console.log("Se encontro archivo runtime, procesando")
-        fs.readFile(ARCHIVO_RUNTIME, function (err, data) {
-            info_posts = JSON.parse(data);
-
-            let keys_ = Object.keys(info_posts)
-            for (let i = 0; i < keys_.length; i++) {
-                for (let j = 0; j < PROCESOS.length; j++) {
-
-                    if (info_posts[keys_[i]][PROCESOS[j]] === undefined)
-                        info_posts[keys_[i]][PROCESOS[j]] = false
-
-                    if (info_posts[keys_[i]][PROCESOS[j]] == false) {
-                        cola_process[PROCESOS[j]].push(info_posts[keys_[i]])
-                        diccio_process[PROCESOS[j]][keys_[i]] = info_posts[keys_[i]]
-                        console.log(keys_[i], ' agregado a lista ', PROCESOS[j])
-                    }
-
-                }
-
-            }
-        });
-    } catch (error) {
-        console.log(error)
-    }
-} else {
-    console.log("no hay archivo runtime encontrado")
-}
-
-if (fs.existsSync(ARCHIVO_DICCIO)) {
-    try {
-        console.log("Se encontro archivo diccionario")
-        fs.readFile(ARCHIVO_DICCIO, function (err, data) {
-            diccio_comments = JSON.parse(data);
-        });
-    } catch (error) {
-        console.log(error)
-    }
-} else {
-    console.log("no hay archivo runtime encontrado")
-}
