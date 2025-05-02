@@ -6,3 +6,6 @@ test.html
 test.json
 resultados/*.zip
 resultados_busqueda.json
+__pycache__
+__pycache__/*
+config.json
