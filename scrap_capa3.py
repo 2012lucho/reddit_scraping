@@ -32,9 +32,8 @@ while True:
 
     id_img = 0
 
-    for id_comment in comentarios:
-        print("")
-        comentario = comentarios[id_comment]
+    for id_comentario in comentarios:
+        comentario = comentarios[id_comentario]
         print("comentario ",comentario)
 
         try:
